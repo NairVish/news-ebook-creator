@@ -1,2 +1,4 @@
 ebooklib
 requests
+jinja2
+geopy

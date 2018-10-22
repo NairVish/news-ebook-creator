@@ -1,0 +1,3 @@
+DARK_SKY_API_KEY = ""
+NEWS_API_KEY = ""
+MAILGUN_API_KEY = ""
