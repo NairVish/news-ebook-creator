@@ -6,6 +6,9 @@ from ebooklib import epub
 from jinja2 import Environment, FileSystemLoader
 from geopy.geocoders import Nominatim
 from newspaper import Article
+from docutils.core import publish_doctree, publish_from_doctree
+from bs4 import BeautifulSoup
+
 
 DARK_SKY_API_URL = "https://api.darksky.net/forecast/{}/{},{}"
 NEWS_API_URL = "https://newsapi.org/v2/top-headlines"
@@ -56,3 +59,21 @@ for a in news_request_results["articles"]:
     pa["article_text"] = this_article.text
     count += 1
     parsed_articles.append(pa)
+
+# use template
+template = env.get_template('article_template.html')
+
+for a in parsed_articles:
+    # TODO: Consider applying top/main image.
+
+    c = epub.EpubHtml(title=a["title"], file_name="article_{}.xhtml".format(a["count"]), lang='en')
+    tree = publish_doctree(a["article_text"])
+    html = publish_from_doctree(tree, writer_name='html').decode()
+    soup = BeautifulSoup(html, 'lxml')
+    body = soup.find('body').find('div', {"class": "document"})
+    a["article_text"] = body
+
+    c.set_content(template.render(article=a))
+    chaps.append(c)
+    book.add_item(c)
+

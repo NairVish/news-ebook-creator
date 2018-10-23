@@ -3,3 +3,5 @@ requests
 jinja2
 geopy
 newspaper3k
+docutils
+beautifulsoup4
