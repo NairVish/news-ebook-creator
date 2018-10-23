@@ -98,3 +98,8 @@ with open('book_style.css', 'r') as css_file:
 # add css file
 nav_css = epub.EpubItem(uid="style_nav", file_name="style/nav.css", media_type="text/css", content=style)
 book.add_item(nav_css)
+
+chaps.insert(0, 'nav')
+book.spine = chaps
+
+epub.write_epub('news_update_{}.epub'.format(int(round(time.time())), book, {}))
