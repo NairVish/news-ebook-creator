@@ -83,3 +83,10 @@ for a in parsed_articles:
         epub.Link("article_{}.xhtml".format(a["count"]), "{} - {}".format(a["title"], a["source"]),
                   "art%d" % a["count"]))
 
+book.toc = (weather_link,
+            (epub.Section("Articles"), tuple(article_toc_list))
+            )
+
+# add navigation files
+self.book.add_item(epub.EpubNcx())
+self.book.add_item(epub.EpubNav())
