@@ -1,0 +1,17 @@
+<html>
+    <head>
+    </head>
+    <body>
+        <h2>Weather as of {{ weather.currently.time|secToStrfTime }}</h2>
+
+        <h3>Currently</h3>
+        <p>
+            <b>Temperature:</b> {{ weather.currently.temperature|round }}&deg;F<br>
+            <b>Conditions:</b> {{ weather.currently.summary }}<br>
+            <b>Wind:</b> {{ weather.currently.windBearing|toCardinal }} {{ weather.currently.windSpeed|round }}mph<br>
+            <b>Humidity:</b> {{ (weather.currently.humidity*100)|round }}&#37;<br>
+            <b>UV Index:</b> {{ weather.currently.uvIndex }}<br>
+            <b>Probability of Precipitation:</b> {{ (weather.currently.precipProbability*100)|round }}&#37;<br>
+        </p>
+    </body>
+</html>
