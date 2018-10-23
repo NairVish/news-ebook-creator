@@ -2,3 +2,4 @@ ebooklib
 requests
 jinja2
 geopy
+newspaper3k
