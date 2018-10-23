@@ -35,6 +35,7 @@ c = epub.EpubHtml(title="weather", file_name="weather.xhtml", lang='en')
 c.set_content(template.render(weather=r.json()))
 book.add_item(c)
 chaps.append(c)
+weather_link = epub.Link("weather.xhtml", "Current Weather", "weather00")
 
 # news
 r = requests.get(NEWS_API_URL, params={'apiKey': settings.NEWS_API_KEY, 'country': "us"})
@@ -62,6 +63,7 @@ for a in news_request_results["articles"]:
 
 # use template
 template = env.get_template('article_template.html')
+article_toc_list = []
 
 for a in parsed_articles:
     # TODO: Consider applying top/main image.
@@ -76,4 +78,8 @@ for a in parsed_articles:
     c.set_content(template.render(article=a))
     chaps.append(c)
     book.add_item(c)
+
+    article_toc_list.append(
+        epub.Link("article_{}.xhtml".format(a["count"]), "{} - {}".format(a["title"], a["source"]),
+                  "art%d" % a["count"]))
 
