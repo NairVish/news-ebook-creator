@@ -88,5 +88,13 @@ book.toc = (weather_link,
             )
 
 # add navigation files
-self.book.add_item(epub.EpubNcx())
-self.book.add_item(epub.EpubNav())
+book.add_item(epub.EpubNcx())
+book.add_item(epub.EpubNav())
+
+# define css style
+with open('book_style.css', 'r') as css_file:
+    style = css_file.read()
+
+# add css file
+nav_css = epub.EpubItem(uid="style_nav", file_name="style/nav.css", media_type="text/css", content=style)
+book.add_item(nav_css)
