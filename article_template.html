@@ -7,6 +7,9 @@
         {% if article.author is not none %}
         <h4>By: {{ article.author }}</h4>
         {% endif %}
+        {% if article.top_image is not none %}
+        <img src="{{ article.top_image }}" />
+        {% endif %}
         {{ article.article_text|safe }}
     </body>
 </html>
