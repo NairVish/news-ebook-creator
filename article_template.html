@@ -4,7 +4,9 @@
     <body>
         <h3>{{ article.source }}</h3>
         <h2>{{ article.title }}</h2>
+        {% if article.author is not none %}
         <h4>By: {{ article.author }}</h4>
+        {% endif %}
         {{ article.article_text|safe }}
     </body>
 </html>
