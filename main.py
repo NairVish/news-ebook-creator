@@ -8,7 +8,7 @@ from geopy.geocoders import Nominatim
 from newspaper import Article
 from docutils.core import publish_doctree, publish_from_doctree
 from bs4 import BeautifulSoup
-
+from custom_filters import TemplateFilters
 
 DARK_SKY_API_URL = "https://api.darksky.net/forecast/{}/{},{}"
 NEWS_API_URL = "https://newsapi.org/v2/top-headlines"
@@ -17,6 +17,7 @@ book = epub.EpubBook()
 chaps = []
 
 env = Environment(loader=FileSystemLoader(os.getcwd()))
+TemplateFilters.register_template_filters_to_env(env)
 
 book.set_identifier('ebook_news_{}'.format(int(round(time.time()))))
 book.set_title("News Update (10/22/18, 7:30pm)")

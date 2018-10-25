@@ -13,5 +13,16 @@
             <b>UV Index:</b> {{ weather.currently.uvIndex }}<br>
             <b>Probability of Precipitation:</b> {{ (weather.currently.precipProbability*100)|round }}&#37;<br>
         </p>
+
+        {% if 'alerts' in weather %}
+        <h3 style="color: red;">Active Alerts</h3>
+            {% for a in weather.alerts %}
+            <p>
+                <b>{{ a["title"] }}</b><br>
+                <b>Expires: </b> {{ a["expires"]|secToStrfTime }}<br>
+                {{ a["description"] }}
+            </p>
+            {% endfor %}
+        {% endif %}
     </body>
 </html>
