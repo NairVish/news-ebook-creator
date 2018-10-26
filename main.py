@@ -71,7 +71,18 @@ template = env.get_template('article_template.html')
 article_toc_list = []
 
 for a in parsed_articles:
-    # TODO: Consider applying top/main image.
+
+    if a["top_image"] is not None:
+        img_file_name = "art_img/image_{:03d}".format(a["count"])
+        epimg = epub.EpubImage()
+        epimg.file_name = img_file_name
+        epimg.media_type = "image/jpeg"
+        img_resp = requests.get(a["top_image"])
+        img = img_resp.content
+        epimg.set_content(img)
+        book.add_item(epimg)
+
+        a["top_image"] = img_file_name
 
     c = epub.EpubHtml(title=a["title"], file_name="article_{}.xhtml".format(a["count"]), lang='en')
     tree = publish_doctree(a["article_text"])
