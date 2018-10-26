@@ -24,5 +24,24 @@
             </p>
             {% endfor %}
         {% endif %}
+
+        <h3>Today</h3>
+        <p>
+            {{ weather.hourly.summary }}
+        </p>
+
+        <h3>This Week</h3>
+        <p>
+            {{ weather.daily.summary }}
+        </p>
+        {% for d in weather.daily.data %}
+        <p>
+            <b>{{ d["time"]|secToDay }}</b><br>
+            {{ d["summary"] }}<br>
+            <b>High:</b> {{ d["temperatureHigh"]|round }}&deg;F<br>
+            <b>Low:</b> {{ d["temperatureLow"]|round }}&deg;F<br>
+        </p>
+        {% endfor %}
+
     </body>
 </html>
