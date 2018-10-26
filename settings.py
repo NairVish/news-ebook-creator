@@ -5,3 +5,5 @@ MAILGUN_API_KEY = ""
 # MAIL
 MAILGUN_DOMAIN = ""
 MAILGUN_FROM_ADDR = ""
+
+TITLE_EXCLUSIONS = ["video:", "watch:"]

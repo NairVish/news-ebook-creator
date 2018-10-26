@@ -91,6 +91,10 @@ for a in parsed_articles:
     body = soup.find('body').find('div', {"class": "document"})
     a["article_text"] = body
 
+    # skip articles that have barred keywords
+    if any(kw in a["title"].lower() for kw in settings.TITLE_EXCLUSIONS):
+        continue
+
     c.set_content(template.render(article=a))
     chaps.append(c)
     book.add_item(c)
