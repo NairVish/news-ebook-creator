@@ -12,6 +12,10 @@ from custom_filters import TemplateFilters
 
 DARK_SKY_API_URL = "https://api.darksky.net/forecast/{}/{},{}"
 NEWS_API_URL = "https://newsapi.org/v2/top-headlines"
+MAILGUN_API_URL = "https://api.mailgun.net/v3/{}/messages"
+
+to_email = ""
+target_time = int(round(time.time()))
 
 book = epub.EpubBook()
 chaps = []
@@ -19,7 +23,7 @@ chaps = []
 env = Environment(loader=FileSystemLoader(os.getcwd()))
 TemplateFilters.register_template_filters_to_env(env)
 
-book.set_identifier('ebook_news_{}'.format(int(round(time.time()))))
+book.set_identifier('ebook_news_{}'.format(target_time))
 book.set_title("News Update (10/22/18, 7:30pm)")
 book.set_language("en")
 book.add_author("News eBook Creator")
@@ -104,3 +108,21 @@ chaps.insert(0, 'nav')
 book.spine = chaps
 
 epub.write_epub('news_update_{}.epub'.format(int(round(time.time()))), book, {})
+
+# MAIL
+URL = MAILGUN_API_URL.format(settings.MAILGUN_DOMAIN)
+
+r = requests.post(
+    URL,
+    auth=("api", settings.MAILGUN_API_KEY),
+    files=[("attachment", open('news_update_{}.epub'.format(target_time), "rb"))],
+    data={
+        "subject": "News Update ({})".format(TemplateFilters.secToStrfTime(target_time)),
+        "from": settings.MAILGUN_FROM_ADDR,
+        "to": to_email,
+        "text": "Your news update for {}.".format(TemplateFilters.secToStrfTime(target_time)),
+        "html": "<p>Your news update for {}.<p>".format(TemplateFilters.secToStrfTime(target_time)),
+    }
+)
+
+print(r.text)
