@@ -60,7 +60,9 @@ class NewsEbookCreator:
         geolocator = Nominatim(user_agent=settings.NOMINATIM_USER_AGENT)
         location = geolocator.geocode(self.city)
         r = requests.get(self.DARK_SKY_API_URL.format(settings.DARK_SKY_API_KEY, location.latitude, location.longitude))
-        # TODO: Error-check request.
+        if r.status_code != 200:
+            print("Dark Sky's response: {}".format(r.text))
+            r.raise_for_status()
 
         # put into book
         c = epub.EpubHtml(title="weather", file_name="weather.xhtml", lang='en')
@@ -76,7 +78,9 @@ class NewsEbookCreator:
     def _download_all_news(self):
         # download and parse news
         r = requests.get(self.NEWS_API_URL, params={'apiKey': settings.NEWS_API_KEY, 'country': "us"})
-        # TODO: Error-check request.
+        if r.status_code != 200:
+            print("News API's response: {}".format(r.text))
+            r.raise_for_status()
         news_request_results = r.json()
         parsed_articles = []
         count = 0
@@ -188,8 +192,8 @@ class NewsEbookCreator:
                 "html": "<p>Your news update for {}.<p>".format(TemplateFilters.secToStrfTime(int(self.target_time))),
             }
         )
-        # TODO: Check for errors
-        print(r.text)
+        print("Mailgun's response:\n{}".format(r.text))
+        r.raise_for_status()
 
     def delete_ebook_file(self):
         os.remove(self.book_filename)
