@@ -3,6 +3,8 @@ import time
 import os
 import settings
 import justext
+import argparse
+import sys
 from ebooklib import epub
 from jinja2 import Environment, FileSystemLoader
 from geopy.geocoders import Nominatim
@@ -180,3 +182,23 @@ class NewsEbookCreator:
         )
         # TODO: Check for errors
         print(r.text)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Create an EPUB-formatted eBook with the latest weather and news headlines.")
+    parser.add_argument("-c", "--city", required=True, help="<REQUIRED> city whose weather to download")
+    parser.add_argument("-e", "--email", nargs='+', required=True,
+                        help="<REQUIRED> emails to send the resultant ebook to")
+    parser.add_argument("-d", "--delete", action="store_true", default=False,
+                        help="<OPTIONAL> delete the saved ebook from the filesystem (default [without this arg]: keeps the book)")
+
+    # if no arguments are given, automatically print the help text (-h option)
+    if len(sys.argv) == 1:
+        parser.print_help(sys.stderr)
+        sys.exit(1)
+
+    args = vars(parser.parse_args())
+    print("Arguments: {}".format(args))
+    new_ebook = NewsEbookCreator(args["city"], args["email"], delete_after=args["delete"])
+    new_ebook.synthesize_ebook()
