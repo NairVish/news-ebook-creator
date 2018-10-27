@@ -49,6 +49,8 @@ class NewsEbookCreator:
         self.get_and_ebookize_news()
         self.bind_and_save_epub()
         self.email_ebook()
+        if self.delete_after:
+            self.delete_ebook_file()
 
     def get_and_ebookize_weather(self):
         # use template
@@ -188,6 +190,9 @@ class NewsEbookCreator:
         )
         # TODO: Check for errors
         print(r.text)
+
+    def delete_ebook_file(self):
+        os.remove(self.book_filename)
 
 
 if __name__ == "__main__":
