@@ -6,3 +6,4 @@ newspaper3k
 docutils
 beautifulsoup4
 lxml
+justext

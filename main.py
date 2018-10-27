@@ -2,6 +2,7 @@ import requests
 import time
 import os
 import settings
+import justext
 from ebooklib import epub
 from jinja2 import Environment, FileSystemLoader
 from geopy.geocoders import Nominatim
@@ -88,12 +89,28 @@ for a in parsed_articles:
     tree = publish_doctree(a["article_text"])
     html = publish_from_doctree(tree, writer_name='html').decode()
     soup = BeautifulSoup(html, 'lxml')
-    body = soup.find('body').find('div', {"class": "document"})
-    a["article_text"] = body
+    body_only = soup.find('body').find('div', {"class": "document"})
 
     # skip articles that have barred keywords
     if any(kw in a["title"].lower() for kw in settings.TITLE_EXCLUSIONS):
         continue
+
+    if len(body_only.findAll('p')) < settings.MIN_PARAGRAPHS_FOR_AN_ARTICLE:
+        # fall back to justext to synthesize article
+        a["article_text"] = ""
+        count = 0
+        paragraphs = justext.justext(requests.get(a["url"]).content, justext.get_stoplist("English"))
+        for paragraph in paragraphs:
+            if not paragraph.is_boilerplate:
+                count += 1
+                a["article_text"] += "<p>{}</p>".format(paragraph.text)
+        if count < settings.MIN_PARAGRAPHS_FOR_AN_ARTICLE:
+            continue  # if it's still short, then it's actually short and not parsed incorrectly...continue
+        else:
+            pass
+            # article as indeed parsed incorrectly TODO: Print statements
+    else:
+        a["article_text"] = body_only
 
     c.set_content(template.render(article=a))
     chaps.append(c)
