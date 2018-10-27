@@ -1,27 +1,28 @@
 import requests
-import time
-import os
 import settings
-import justext
-import argparse
+import os
 import sys
-from ebooklib import epub
-from jinja2 import Environment, FileSystemLoader
+import time
+import argparse
+import justext
+from bs4 import BeautifulSoup
 from geopy.geocoders import Nominatim
 from newspaper import Article
+from ebooklib import epub
 from docutils.core import publish_doctree, publish_from_doctree
-from bs4 import BeautifulSoup
+from jinja2 import Environment, FileSystemLoader
 from custom_filters import TemplateFilters
 
-class NewsEbookCreator:
 
-    DARK_SKY_API_URL = "https://api.darksky.net/forecast/{}/{},{}"
-    NEWS_API_URL = "https://newsapi.org/v2/top-headlines"
-    MAILGUN_API_URL = "https://api.mailgun.net/v3/{}/messages"
+class NewsEbookCreator:
 
     EPUB_META_AUTHOR = "News eBook Creator"
     EPUB_META_TIILE = 'News Update (%m/%d/%y, %I:%M%p)'
     EPUB_META_LANG = "en"
+
+    DARK_SKY_API_URL = "https://api.darksky.net/forecast/{}/{},{}"
+    NEWS_API_URL = "https://newsapi.org/v2/top-headlines"
+    MAILGUN_API_URL = "https://api.mailgun.net/v3/{}/messages"
 
     def __init__(self, city: str, to_email: list, delete_after: bool = False):
         self.city = city
@@ -45,15 +46,18 @@ class NewsEbookCreator:
         self.toc_list = []
 
     def synthesize_ebook(self):
+        print("===== SYNTHESIZING EBOOK =====")
         self.get_and_ebookize_weather()
         self.get_and_ebookize_news()
         self.bind_and_save_epub()
         self.email_ebook()
         if self.delete_after:
             self.delete_ebook_file()
+        print("===== SYNTHESIS DONE =====")
 
     def get_and_ebookize_weather(self):
-        # use template
+        print("=== Getting and ebook-izing weather. ===")
+        # get template
         template = self.env.get_template('weather_template.html')
 
         # Geo-locate
@@ -63,6 +67,7 @@ class NewsEbookCreator:
         if r.status_code != 200:
             print("Dark Sky's response: {}".format(r.text))
             r.raise_for_status()
+        print("Downloaded weather.")
 
         # put into book
         c = epub.EpubHtml(title="weather", file_name="weather.xhtml", lang='en')
@@ -72,10 +77,12 @@ class NewsEbookCreator:
         self.weather_link = epub.Link("weather.xhtml", "Current Weather", "weather00")
 
     def get_and_ebookize_news(self):
+        print("=== Getting and processing news. ===")
         all_articles = self._download_all_news()
         self._ebookize_all_news(all_articles)
 
     def _download_all_news(self):
+        print("* Downloading top headlines as of this moment. *")
         # download and parse news
         r = requests.get(self.NEWS_API_URL, params={'apiKey': settings.NEWS_API_KEY, 'country': "us"})
         if r.status_code != 200:
@@ -98,16 +105,21 @@ class NewsEbookCreator:
             this_article.download()
             this_article.parse()
             pa["article_text"] = this_article.text
+            print("Downloaded and parsed #{}: {}".format(count, pa["title"]))
             count += 1
             parsed_articles.append(pa)
 
         return parsed_articles
 
     def _ebookize_all_news(self, parsed_articles):
+        print("* Ebook-izing downloaded headlines. *")
+        # some initialization
         template = self.env.get_template('article_template.html')
         self.article_toc_list = []
 
+        # put each into ebook
         for a in parsed_articles:
+            print("Loading #{} into ebook: {}".format(a["count"], a["title"]))
 
             if a["top_image"] is not None:
                 img_file_name = "art_img/image_{:03d}".format(a["count"])
@@ -129,9 +141,13 @@ class NewsEbookCreator:
 
             # skip articles that have barred keywords
             if any(kw in a["title"].lower() for kw in settings.TITLE_EXCLUSIONS):
+                print("\tArticle title contains a barred keyword. Skipping.")
                 continue
 
             if len(body_only.findAll('p')) < settings.MIN_PARAGRAPHS_FOR_AN_ARTICLE:
+                print(
+                    "\tArticle from {} too short. It may be paywalled or a video. It may also have been parsed incorrectly."
+                    "\n\tURL: {}".format(a["source"], a["url"]))
                 # fall back to justext to synthesize article
                 a["article_text"] = ""
                 count = 0
@@ -141,10 +157,10 @@ class NewsEbookCreator:
                         count += 1
                         a["article_text"] += "<p>{}</p>".format(paragraph.text)
                 if count < settings.MIN_PARAGRAPHS_FOR_AN_ARTICLE:
+                    print("\t\tArticle parsed correctly but actually short. Skipping.")
                     continue  # if it's still short, then it's actually short and not parsed incorrectly...continue
                 else:
-                    pass
-                    # article as indeed parsed incorrectly TODO: Print statements
+                    print("\t\tArticle was indeed parsed incorrectly. Fallback has parsed it correctly.")
             else:
                 a["article_text"] = body_only
 
@@ -156,6 +172,7 @@ class NewsEbookCreator:
                           "art%d" % a["count"]))
 
     def bind_and_save_epub(self):
+        print("=== Binding and saving EPUB. ===")
         self.book.toc = (self.weather_link,
                          (epub.Section("Articles"), tuple(self.article_toc_list))
                          )
@@ -177,8 +194,10 @@ class NewsEbookCreator:
 
         self.book_filename = 'news_update_{}.epub'.format(self.target_time)
         epub.write_epub(self.book_filename, self.book, {})
+        print("Saved as {}.".format(self.book_filename))
 
     def email_ebook(self):
+        print("=== Emailing book. ===")
         URL = self.MAILGUN_API_URL.format(settings.MAILGUN_DOMAIN)
         r = requests.post(
             URL,
@@ -196,6 +215,7 @@ class NewsEbookCreator:
         r.raise_for_status()
 
     def delete_ebook_file(self):
+        print("=== Deleting ebook file. ===")
         os.remove(self.book_filename)
 
 
