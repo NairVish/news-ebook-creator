@@ -44,6 +44,12 @@ class NewsEbookCreator:
         self.chaps = []
         self.toc_list = []
 
+    def synthesize_ebook(self):
+        self.get_and_ebookize_weather()
+        self.get_and_ebookize_news()
+        self.bind_and_save_epub()
+        self.email_ebook()
+
     def get_and_ebookize_weather(self):
         # use template
         template = self.env.get_template('weather_template.html')
