@@ -15,6 +15,9 @@ from custom_filters import TemplateFilters
 
 
 class NewsEbookCreator:
+    """
+    Handles synthesis of an ebook that contains the latest news headlines and weather,
+    """
 
     EPUB_META_AUTHOR = "News eBook Creator"
     EPUB_META_TIILE = 'News Update (%m/%d/%y, %I:%M%p)'
@@ -25,15 +28,25 @@ class NewsEbookCreator:
     MAILGUN_API_URL = "https://api.mailgun.net/v3/{}/messages"
 
     def __init__(self, city: str, to_email: list, delete_after: bool = False):
+        """
+        Initializes and prepares the class.
+        :param city: The city whose weather to download and add to the ebook.
+        :param to_email: The email(s) to send the ebook to.
+        :param delete_after: Whether or not to delete the synthesized ebook after the script finishes.
+        """
+        # Handle parameters
         self.city = city
         self.to_email = to_email
         self.delete_after = delete_after
 
+        # Instantiate Jinja2 environment.
         self.env = Environment(loader=FileSystemLoader(os.getcwd()))
         TemplateFilters.register_template_filters_to_env(self.env)
 
+        # Instantiate ebook.
         self.book = epub.EpubBook()
 
+        # Set ebook metadata
         self.book_filename = time.strftime(self.EPUB_META_TIILE)
         self.target_time = int(round(time.time()))
 
@@ -46,6 +59,9 @@ class NewsEbookCreator:
         self.toc_list = []
 
     def synthesize_ebook(self):
+        """
+        Run through synthesis of the ebook.
+        """
         print("===== SYNTHESIZING EBOOK =====")
         self.get_and_ebookize_weather()
         self.get_and_ebookize_news()
@@ -56,6 +72,9 @@ class NewsEbookCreator:
         print("===== SYNTHESIS DONE =====")
 
     def get_and_ebookize_weather(self):
+        """
+        Downloads and parses weather data and then adds it to the ebook.
+        """
         print("=== Getting and ebook-izing weather. ===")
         # get template
         template = self.env.get_template('weather_template.html')
@@ -77,11 +96,18 @@ class NewsEbookCreator:
         self.weather_link = epub.Link("weather.xhtml", "Current Weather", "weather00")
 
     def get_and_ebookize_news(self):
+        """
+        Downloads and parses news data and then adds it to the ebook.
+        """
         print("=== Getting and processing news. ===")
         all_articles = self._download_all_news()
         self._ebookize_all_news(all_articles)
 
     def _download_all_news(self):
+        """
+        Downloads and processes all news data for subsequent addition to the ebook.
+        :return: A list of dicts of parsed articles.
+        """
         print("* Downloading top headlines as of this moment. *")
         # download and parse news
         r = requests.get(self.NEWS_API_URL, params={'apiKey': settings.NEWS_API_KEY, 'country': "us"})
@@ -112,6 +138,10 @@ class NewsEbookCreator:
         return parsed_articles
 
     def _ebookize_all_news(self, parsed_articles):
+        """
+        Adds the previously processed news data to the ebook.
+        :param parsed_articles: The previously processed news data.
+        """
         print("* Ebook-izing downloaded headlines. *")
         # some initialization
         template = self.env.get_template('article_template.html')
@@ -172,6 +202,9 @@ class NewsEbookCreator:
                           "art%d" % a["count"]))
 
     def bind_and_save_epub(self):
+        """
+        Finalizes binding of the ebook and saves it to the filesystem.
+        """
         print("=== Binding and saving EPUB. ===")
         self.book.toc = (self.weather_link,
                          (epub.Section("Articles"), tuple(self.article_toc_list))
@@ -197,6 +230,9 @@ class NewsEbookCreator:
         print("Saved as {}.".format(self.book_filename))
 
     def email_ebook(self):
+        """
+        Emails the ebook to the designated recipients.
+        """
         print("=== Emailing book. ===")
         URL = self.MAILGUN_API_URL.format(settings.MAILGUN_DOMAIN)
         r = requests.post(
@@ -215,6 +251,10 @@ class NewsEbookCreator:
         r.raise_for_status()
 
     def delete_ebook_file(self):
+        """
+        Deletes the synthesized ebook file from the filesystem.
+        :return:
+        """
         print("=== Deleting ebook file. ===")
         os.remove(self.book_filename)
 
