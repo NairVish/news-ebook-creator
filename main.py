@@ -1,16 +1,19 @@
-import requests
-import settings
+import argparse
 import os
 import sys
 import time
-import argparse
+
 import justext
+import requests
+
 from bs4 import BeautifulSoup
-from geopy.geocoders import Nominatim
-from newspaper import Article
-from ebooklib import epub
-from docutils.core import publish_doctree, publish_from_doctree
 from jinja2 import Environment, FileSystemLoader
+from ebooklib import epub
+from newspaper import Article
+from geopy.geocoders import Nominatim
+from docutils.core import publish_doctree, publish_from_doctree
+
+import settings
 from custom_filters import TemplateFilters
 
 
