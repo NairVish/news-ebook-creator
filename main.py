@@ -80,7 +80,7 @@ class NewsEbookCreator:
         """
         print("=== Getting and ebook-izing weather. ===")
         # get template
-        template = self.env.get_template('weather_template.html')
+        template = self.env.get_template('tmpl/weather_template.html')
 
         # Geo-locate
         geolocator = Nominatim(user_agent=settings.NOMINATIM_USER_AGENT)
@@ -147,7 +147,7 @@ class NewsEbookCreator:
         """
         print("* Ebook-izing downloaded headlines. *")
         # some initialization
-        template = self.env.get_template('article_template.html')
+        template = self.env.get_template('tmpl/article_template.html')
         self.article_toc_list = []
 
         # put each into ebook
@@ -218,7 +218,7 @@ class NewsEbookCreator:
         self.book.add_item(epub.EpubNav())
 
         # define css style
-        with open('book_style.css', 'r') as css_file:
+        with open('tmpl/book_style.css', 'r') as css_file:
             style = css_file.read()
 
         # add css file
